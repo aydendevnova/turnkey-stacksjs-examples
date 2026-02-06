@@ -1,0 +1,3 @@
+[submodule "packages/stacks"]
+	path = packages/stacks
+	url = https://github.com/aydendevnova/turnkey-stacksjs-sdk.git
