@@ -1,18 +1,29 @@
 # Turnkey Stacks Monorepo
 
-Monorepo containing the `@turnkey/stacks` SDK and demo application.
+Monorepo containing the `@turnkey/stacks` SDK and two reference applications demonstrating custodial and non-custodial Stacks wallet architectures using Turnkey.
 
 ## Structure
 
 ```
 turnkey-stacks-monorepo/
 ├── packages/
-│   └── stacks/          # @turnkey/stacks SDK (git submodule)
+│   └── stacks/                  # @turnkey/stacks SDK (git submodule)
 ├── apps/
-│   └── demo/            # Next.js demo application
+│   ├── non-custodial-client/    # Next.js — user-owned wallets
+│   └── custodial-server/        # Express — server-owned wallet
 ├── pnpm-workspace.yaml
 └── package.json
 ```
+
+## Apps
+
+### Non-Custodial Client (`apps/non-custodial-client`)
+
+Each user gets their own wallet inside their own Turnkey sub-organization. Signing happens in the browser — the application never touches private keys. On-chain, every user has a distinct address with its own balance. This is the model for wallet apps, DeFi frontends, or any "connect your wallet" experience.
+
+### Custodial Server (`apps/custodial-server`)
+
+A single wallet owned and operated by the server. On-chain there is one address; in theory per-user accounting would be handled entirely off-chain via an internal ledger. When a user requests a withdrawal, the server decides whether to approve it and signs from the master wallet. This is how centralized exchanges, rewards platforms, and payment services work under the hood.
 
 ## Getting Started
 
@@ -40,17 +51,11 @@ pnpm install
 # Build the SDK package first
 pnpm build:packages
 
-# Run the demo app
+# Run the non-custodial client
 pnpm dev
-```
 
-The demo will be available at `http://localhost:3000`.
-
-### Building
-
-```bash
-# Build everything
-pnpm build
+# Run the custodial server
+pnpm dev:server
 ```
 
 ## Packages
@@ -58,33 +63,6 @@ pnpm build
 ### @turnkey/stacks
 
 Turnkey signer for Stacks blockchain transactions. See [packages/stacks/README.md](packages/stacks/README.md) for documentation.
-
-### Demo App
-
-Next.js application demonstrating the SDK functionality:
-- Address derivation from public keys
-- Transaction signing UI (requires Turnkey credentials)
-
-## Deployment
-
-### Vercel
-
-This monorepo is configured for Vercel deployment:
-
-1. Connect the repository to Vercel
-2. Set **Root Directory** to `apps/demo`
-3. Vercel will automatically detect Next.js and configure the build
-
-Alternatively, use the provided `vercel.json` configuration.
-
-### Environment Variables
-
-For the demo to fully function, set these in your Vercel project:
-
-```
-NEXT_PUBLIC_TURNKEY_API_BASE_URL=https://api.turnkey.com
-NEXT_PUBLIC_TURNKEY_ORGANIZATION_ID=your-org-id
-```
 
 ## Git Submodules
 
