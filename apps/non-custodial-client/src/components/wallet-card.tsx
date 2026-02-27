@@ -14,14 +14,15 @@ export function WalletCard() {
   const [balance, setBalance] = useState<bigint | null>(null)
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
 
-  const fetchBalance = useCallback(async () => {
+  const fetchBalance = useCallback(async (signal?: AbortSignal) => {
     if (!stxAddress) return
 
     setIsLoadingBalance(true)
     try {
       const baseUrl = API_ENDPOINTS[network]
       const res = await fetch(
-        `${baseUrl}/extended/v1/address/${stxAddress}/balances?unanchored=true`
+        `${baseUrl}/extended/v1/address/${stxAddress}/balances?unanchored=true`,
+        { signal }
       )
 
       if (!res.ok) throw new Error("Failed to fetch balance")
@@ -29,16 +30,19 @@ export function WalletCard() {
       const data = await res.json()
       setBalance(BigInt(data.stx?.balance || "0"))
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return
       console.error("Error fetching balance:", err)
       setBalance(null)
     } finally {
-      setIsLoadingBalance(false)
+      if (!signal?.aborted) setIsLoadingBalance(false)
     }
   }, [stxAddress, network])
 
-  // Fetch balance on mount and when address/network changes
   useEffect(() => {
-    fetchBalance()
+    setBalance(null)
+    const controller = new AbortController()
+    fetchBalance(controller.signal)
+    return () => controller.abort()
   }, [fetchBalance])
 
   if (!stxAddress) return null
@@ -74,7 +78,7 @@ export function WalletCard() {
               </p>
             </div>
             <button
-              onClick={fetchBalance}
+              onClick={() => fetchBalance()}
               disabled={isLoadingBalance}
               className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
               title="Refresh balance"
